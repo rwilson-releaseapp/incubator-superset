@@ -18,17 +18,17 @@ x-superset-build: &superset-build
   args:
     NPM_BUILD_CMD: build-dev
   context: ./
-  dockerfile: Dockerfile-dev
+  dockerfile: Dockerfile
 x-superset-depends-on: &superset-depends-on
   - db
   - redis
-x-superset-volumes: &superset-volumes
+#x-superset-volumes: &superset-volumes
   # /app/pythonpath_docker will be appended to the PYTHONPATH in the final container
-  - ./docker/docker-init.sh:/app/docker-init.sh
-  - ./docker/pythonpath_dev:/app/pythonpath
-  - ./superset:/app/superset
-  - ./superset-frontend:/app/superset-frontend
-  - superset_home:/app/superset_home
+#  - ./docker/docker-init.sh:/app/docker-init.sh
+#  - ./docker/pythonpath_dev:/app/pythonpath
+#  - ./superset:/app/superset
+#  - ./superset-frontend:/app/superset-frontend
+#  - superset_home:/app/superset_home
 
 version: "3.7"
 services:
@@ -37,9 +37,9 @@ services:
     container_name: superset_cache
     restart: unless-stopped
     ports:
-      - "127.0.0.1:6379:6379"
-    volumes:
-      - redis:/data
+      - "6379:6379"
+#    volumes:
+#      - redis:/data
 
   db:
     env_file: docker/.env
@@ -47,9 +47,9 @@ services:
     container_name: superset_db
     restart: unless-stopped
     ports:
-      - "127.0.0.1:5432:5432"
-    volumes:
-      - db_home:/var/lib/postgresql/data
+      - "5432:5432"
+#    volumes:
+#      - db_home:/var/lib/postgresql/data
 
   superset:
     env_file: docker/.env
@@ -60,7 +60,7 @@ services:
     ports:
       - 8088:8088
     depends_on: *superset-depends-on
-    volumes: *superset-volumes
+#    volumes: *superset-volumes
 
   superset-init:
     build: *superset-build
@@ -68,15 +68,15 @@ services:
     command: ["/app/docker-init.sh"]
     env_file: docker/.env
     depends_on: *superset-depends-on
-    volumes: *superset-volumes
+#    volumes: *superset-volumes
 
-  superset-node:
-    image: node:12
-    container_name: superset_node
-    command: ["bash", "-c", "cd /app/superset-frontend && npm install -f --no-optional --global webpack webpack-cli && npm install -f --no-optional && npm run dev"]
-    env_file: docker/.env
-    depends_on: *superset-depends-on
-    volumes: *superset-volumes
+#  superset-node:
+#    image: node:12
+#    container_name: superset_node
+#    command: ["bash", "-c", "cd /app/superset-frontend && npm install -f --no-optional --global webpack webpack-cli && npm install -f --no-optional && npm run dev"]
+#    env_file: docker/.env
+#    depends_on: *superset-depends-on
+#    volumes: *superset-volumes
 
   superset-worker:
     build: *superset-build
@@ -85,27 +85,27 @@ services:
     env_file: docker/.env
     restart: unless-stopped
     depends_on: *superset-depends-on
-    volumes: *superset-volumes
+#    volumes: *superset-volumes
 
-  superset-tests-worker:
-    build: *superset-build
-    container_name: superset_tests_worker
-    command: ["celery", "worker", "--app=superset.tasks.celery_app:app", "-Ofair", "-l", "INFO"]
-    env_file: docker/.env
-    environment:
-      DATABASE_HOST: localhost
-      DATABASE_DB: test
-      REDIS_CELERY_DB: 2
-      REDIS_RESULTS_DB: 3
-      REDIS_HOST: localhost
-    network_mode: host
-    depends_on: *superset-depends-on
-    volumes: *superset-volumes
+#  superset-tests-worker:
+#    build: *superset-build
+#    container_name: superset_tests_worker
+#    command: ["celery", "worker", "--app=superset.tasks.celery_app:app", "-Ofair", "-l", "INFO"]
+#    env_file: docker/.env
+#    environment:
+#      DATABASE_HOST: localhost
+#      DATABASE_DB: test
+#      REDIS_CELERY_DB: 2
+#      REDIS_RESULTS_DB: 3
+#      REDIS_HOST: localhost
+#    network_mode: host
+#    depends_on: *superset-depends-on
+#    volumes: *superset-volumes
 
-volumes:
-  superset_home:
-    external: false
-  db_home:
-    external: false
-  redis:
-    external: false
+#volumes:
+#  superset_home:
+#    external: false
+#  db_home:
+#    external: false
+#  redis:
+#    external: false
